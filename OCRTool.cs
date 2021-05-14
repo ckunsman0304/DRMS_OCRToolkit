@@ -19,6 +19,13 @@ namespace DRMS_OCRToolkit
         private readonly Regex _regex = new Regex(@"[^a-zA-Z0-9 -]");
         private readonly string _connectionString;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="credentialsPath">Path to the credentials JSON file for 
+        /// access to Google VisionAI.</param>
+        /// <param name="connString">Connection string used to connect to 
+        /// desired database.</param>
         public OCRTool(string credentialsPath, string connString)
         {
             _credentialsPath = credentialsPath;
@@ -30,22 +37,42 @@ namespace DRMS_OCRToolkit
         }
 
         #region Getters/Setters
+        /// <summary>
+        /// Getter method for the connection string.
+        /// </summary>
+        /// <returns>A copy of the connection string.</returns>
         public string GetConnectionString()
         {
             return string.Copy(_connectionString);
         }
 
+        /// <summary>
+        /// Setter method that returns a new OCRTool object with 
+        /// the new connection string set.
+        /// </summary>
+        /// <param name="connString">The new connection string.</param>
+        /// <returns>A new OCRTool object.</returns>
         public OCRTool SetConnectionString(string connString)
         {
             using (var test = new DataModel(connString)) { }
             return new OCRTool(_credentialsPath, connString);
         }
 
+        /// <summary>
+        /// Getter method for the credentials path.
+        /// </summary>
+        /// <returns>A copy of the credentials path.</returns>
         public string GetCredentials()
         {
             return string.Copy(_credentialsPath);
         }
 
+        /// <summary>
+        /// Setter method that returns a new OCRTool object with the 
+        /// specified credentials path set.
+        /// </summary>
+        /// <param name="credentialsPath">New credentials path.</param>
+        /// <returns>A new OCRTool object.</returns>
         public OCRTool SetCredentials(string credentialsPath)
         {
             return new OCRTool(credentialsPath, _connectionString);
@@ -53,6 +80,10 @@ namespace DRMS_OCRToolkit
         #endregion
 
         #region Helpers
+        /// <summary>
+        /// Deletes all given files.
+        /// </summary>
+        /// <param name="imagePaths">Paths of files to be deleted.</param>
         private void ClearFiles(string[] imagePaths)
         {
             foreach (var file in imagePaths)
@@ -61,7 +92,14 @@ namespace DRMS_OCRToolkit
             }
         }
 
-        public List<PageText> ProcessResponse(TextAnnotation response, string docID, int pageNum)
+        /// <summary>
+        /// Turns Google VisionAI response into a list of PageText objects.
+        /// </summary>
+        /// <param name="response">Response from Google VisionAI</param>
+        /// <param name="docID">The file name of the document that was scanned.</param>
+        /// <param name="pageNum">Specific page number that was scanned (0-based index).</param>
+        /// <returns></returns>
+        private List<PageText> ProcessResponse(TextAnnotation response, string docID, int pageNum)
         {
             var results = new List<PageText>();
             foreach (var page in response.Pages)
@@ -73,16 +111,19 @@ namespace DRMS_OCRToolkit
                         foreach (var word in paragraph.Words)
                         {
                             var text = _regex.Replace(string.Join("", word.Symbols.Select(s => s.Text)), string.Empty);
-                            results.Add(new PageText
+                            if (!string.IsNullOrWhiteSpace(text))
                             {
-                                DocumentID = docID,
-                                PageNumber = pageNum,
-                                Text = text,
-                                ULX = word.BoundingBox.Vertices[0].X,
-                                ULY = word.BoundingBox.Vertices[0].Y,
-                                LRX = word.BoundingBox.Vertices[2].X,
-                                LRY = word.BoundingBox.Vertices[2].Y
-                            });
+                                results.Add(new PageText
+                                {
+                                    DocumentID = docID,
+                                    PageNumber = pageNum,
+                                    Text = text,
+                                    ULX = word.BoundingBox.Vertices[0].X,
+                                    ULY = word.BoundingBox.Vertices[0].Y,
+                                    LRX = word.BoundingBox.Vertices[2].X,
+                                    LRY = word.BoundingBox.Vertices[2].Y
+                                });
+                            }
                         }
                     }
                 }
@@ -90,12 +131,23 @@ namespace DRMS_OCRToolkit
             return results;
         }
 
+        /// <summary>
+        /// Ensures that the Google VisionAI client has been built.
+        /// Throws an ArgumentException if not.
+        /// </summary>
         private void ValidateVision()
         {
             if (string.IsNullOrEmpty(_credentialsPath))
                 throw new ArgumentException("You must set the credentials before reading a pdf.");
         }
-                
+
+        /// <summary>
+        /// Turn each pdf page into it's own png file to be processed.
+        /// </summary>
+        /// <param name="psFilename">File path to the pdf.</param>
+        /// <param name="outputPath">Path to dump the output into.</param>
+        /// <param name="dpi"></param>
+        /// <returns>Array where each object in the array is a file path to a png file.</returns>
         private static string[] GetPngImage(string psFilename, string outputPath, int dpi = 300)
         {
             using (var rasterizer = new GhostscriptRasterizer()) //create an instance for GhostscriptRasterizer
@@ -120,6 +172,15 @@ namespace DRMS_OCRToolkit
             }
         }
 
+        /// <summary>
+        /// Processes the file paths. If overrideExisting is true it deletes 
+        /// existing data from the database. Otherwise it removes that file 
+        /// path from the array.
+        /// </summary>
+        /// <param name="filePaths">PDF file paths to process.</param>
+        /// <param name="overrideExisting">Indicate whether or not you want to 
+        /// override any existing data.</param>
+        /// <returns>Fully processed array of file paths to use.</returns>
         private string[] ProcessPaths(string[] filePaths, bool overrideExisting)
         {
             using (var context = new DataModel(_connectionString))
@@ -147,6 +208,14 @@ namespace DRMS_OCRToolkit
         #endregion
 
         #region Writing
+        /// <summary>
+        /// Batch processing method for performing OCR on all pages of all 
+        /// documents provided and writes the result to the database.
+        /// </summary>
+        /// <param name="filePaths">Array of paths to the pdf files to be added.</param>
+        /// <param name="overrideExisting">Indicate whether or not to override existing 
+        /// data for any of the documents (if there is any).</param>
+        /// <returns>An awaitable Task object.</returns>
         public async Task WriteToDBAsync(string[] filePaths, bool overrideExisting)
         {
             ValidateVision();
@@ -205,6 +274,13 @@ namespace DRMS_OCRToolkit
                 return;
         }
 
+        /// <summary>
+        /// Performs OCR on all pages of the provided document and
+        /// writes the results to the database.
+        /// </summary>
+        /// <param name="filePath">Path to the pdf file to be added.</param>
+        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// existing data for this document (if there is any).</param>
         public void WriteToDB(string filePath, bool overrideExisting)
         {
             ValidateVision();
@@ -230,11 +306,27 @@ namespace DRMS_OCRToolkit
                 }
             }
         }
+        /// <summary>
+        /// Performs OCR on all pages of the provided document and
+        /// writes the results to the database.
+        /// </summary>
+        /// <param name="filePath">Path to the pdf file to be added.</param>
+        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// existing data for this page of the document (if there is any).</param>
+        /// <returns>An awaitable Task object.</returns>
         public async Task WriteToDBAsync(string filePath, bool overrideExisting)
         {
             await Task.Run(() => WriteToDB(filePath, overrideExisting));
         }
 
+        /// <summary>
+        /// Performs OCR on the specified page of the provided document and 
+        /// writes the result to the database.
+        /// </summary>
+        /// <param name="filePath">Path to the pdf file to be added.</param>
+        /// <param name="pageNum">Page number to be scanned (0-based index).</param>
+        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// existing data for this page of the document (if there is any).</param>
         public void WriteToDB(string filePath, int pageNum, bool overrideExisting)
         {
             ValidateVision();
@@ -257,6 +349,15 @@ namespace DRMS_OCRToolkit
                 ClearFiles(imagePaths); //Cleanup
             }
         }
+        /// <summary>
+        /// Performs OCR on the specified page of the provided document and 
+        /// writes the result to the database.
+        /// </summary>
+        /// <param name="filePath">Path to the pdf file to be added.</param>
+        /// <param name="pageNum">Page number to be scanned (0-based index).</param>
+        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// existing data for this page of the document (if there is any).</param>
+        /// <returns>An awaitable Task object.</returns>
         public async Task WriteToDBAsync(string filePath, int pageNum, bool overrideExisting)
         {
             await Task.Run(() => WriteToDB(filePath, pageNum, overrideExisting));
@@ -264,6 +365,13 @@ namespace DRMS_OCRToolkit
         #endregion
 
         #region Searching
+        /// <summary>
+        /// Searches through all documents in the database and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
+        /// matched document and the value is a list of matched words.</returns>
         public SortedList<string, List<string>> FindDocuments(string[] searchWords)
         {
             Parallel.For(0, searchWords.Length, i =>
@@ -293,16 +401,31 @@ namespace DRMS_OCRToolkit
             }
             return results;
         }
+        /// <summary>
+        /// Searches through all documents in the database and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
+        /// matched document and the value is a list of matched words.</returns>
         public async Task<SortedList<string, List<string>>> FindDocumentsAsync(string[] searchWords)
         {
             return await Task.Run(() => FindDocuments(searchWords));
         }
 
+        /// <summary>
+        /// Searches through the given documents and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <param name="searchDocs">File paths of documents to search through.</param>
+        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
+        /// matched document and the value is a list of matched words.</returns>
         public SortedList<string, List<string>> FindDocuments(string[] searchWords, string[] searchDocs)
         {
             Parallel.For(0, searchWords.Length, i =>
             {
-                searchWords[i] = searchWords[i].Trim().ToUpper();
+                searchWords[i] = _regex.Replace(searchWords[i].ToUpper(), string.Empty);
             });                
 
             var results = new SortedList<string, List<string>>();
@@ -327,6 +450,14 @@ namespace DRMS_OCRToolkit
             }
             return results;
         }
+        /// <summary>
+        /// Searches through the given documents and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <param name="searchDocs">File paths of documents to search through.</param>
+        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
+        /// matched document and the value is a list of matched words.</returns>
         public async Task<SortedList<string, List<string>>> FindDocumentsAsync(string[] searchWords, string[] searchDocs)
         {
             return await Task.Run(() => FindDocuments(searchWords, searchDocs));
@@ -334,6 +465,11 @@ namespace DRMS_OCRToolkit
         #endregion
 
         #region Reading
+        /// <summary>
+        /// Determines whether or not the database already has data for the provided document.
+        /// </summary>
+        /// <param name="filePath">Path to the pdf file that should be matched.</param>
+        /// <returns>Value indicating if the database has data for this document.</returns>
         public bool DocumentExists(string filePath)
         {
             using(var context = new DataModel(_connectionString))
@@ -343,11 +479,21 @@ namespace DRMS_OCRToolkit
             }
         }
 
+        /// <summary>
+        /// Determines whether or not the given document contains one or more of the words given in the array.
+        /// If dbSearch is set to true then it will search the database for matching values first. If the 
+        /// document does not exist in the database then it will scan the document again and use that to 
+        /// determine if the document contains any of the words or not.
+        /// </summary>
+        /// <param name="dbSearch">Indicated whether you want to search the database for a match first.</param>
+        /// <param name="filePath">Path to the pdf file that should be searched.</param>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <returns>Boolean indicating whether or not the document contains any of the provided words.</returns>
         public bool DocumentContains(bool dbSearch, string filePath, string[] searchWords)
         {
             Parallel.For(0, searchWords.Length, i =>
             {
-                searchWords[i] = searchWords[i].ToUpper();
+                searchWords[i] = _regex.Replace(searchWords[i].ToUpper(), string.Empty);
             });
             if (dbSearch && DocumentExists(filePath))
             {
@@ -377,7 +523,8 @@ namespace DRMS_OCRToolkit
                             {
                                 foreach (var word in paragraph.Words)
                                 {
-                                    if (searchWords.Contains(string.Join("", word.Symbols.Select(s => s.Text)).ToUpper()))
+                                    var text = _regex.Replace(string.Join("", word.Symbols.Select(s => s.Text)).ToUpper(), string.Empty);
+                                    if (searchWords.Contains(text))
                                     {
                                         result = true;
                                         return;
@@ -390,11 +537,29 @@ namespace DRMS_OCRToolkit
                 return result;
             }
         }
+        /// <summary>
+        /// Determines whether or not the given document contains one or more of the words given in the array.
+        /// If dbSearch is set to true then it will search the database for matching values first. If the 
+        /// document does not exist in the database then it will scan the document again and use that to 
+        /// determine if the document contains any of the words or not.
+        /// </summary>
+        /// <param name="dbSearch">Indicated whether you want to search the database for a match first.</param>
+        /// <param name="filePath">Path to the pdf file that should be searched.</param>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <returns>Boolean indicating whether or not the document contains any of the provided words.</returns>
         public async Task<bool> DocumentContainsAsync(bool dbSearch, string filePath, string[] searchWords)
         {
             return await Task.Run(() => DocumentContains(dbSearch, filePath, searchWords));
         }
 
+        /// <summary>
+        /// Provides the OCR text of the specified document. If dbSearch is set to true then it will search the
+        /// database for matching values first. If the document does not exist in the database then it will scan
+        /// the document again and provide that output.
+        /// </summary>
+        /// <param name="dbSearch">Indicate whether you want to search the database for a match first.</param>
+        /// <param name="filePath">Path to the pdf file that should be processed.</param>
+        /// <returns>Array where each object in the array is a string of that respective page's text.</returns>
         public string[] GetDocumentText(bool dbSearch, string filePath)
         {
             if (dbSearch && DocumentExists(filePath))
@@ -423,11 +588,19 @@ namespace DRMS_OCRToolkit
                 {
                     var image = Image.FromFile(path);
                     var response = _client.DetectDocumentText(image);
-                    result.Add(response.Text.Trim());
+                    result.Add(_regex.Replace(response.Text.Trim(), string.Empty));
                 });
                 return result.ToArray();
             }
         }
+        /// <summary>
+        /// Provides the OCR text of the specified document. If dbSearch is set to true then it will search the
+        /// database for matching values first. If the document does not exist in the database then it will scan
+        /// the document again and provide that output.
+        /// </summary>
+        /// <param name="dbSearch">Indicate whether you want to search the database for a match first.</param>
+        /// <param name="filePath">Path to the pdf file that should be processed.</param>
+        /// <returns>Array where each object in the array is a string of that respective page's text.</returns>
         public async Task<string[]> GetDocumentTextAsync(bool dbSearch, string filePath)
         {
             return await Task.Run(() => GetDocumentText(dbSearch, filePath));

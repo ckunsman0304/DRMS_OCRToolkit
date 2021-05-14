@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>DRMS_OCRToolkit</id>
+    <version>1.0.1</version>
+    <title>DRMS OCR Toolkit</title>
+    <authors>mackentish</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <description>An API used for interacting with Google Vision while also handling the database interactions.</description>
+    <releaseNotes>Added documentation.</releaseNotes>
+    <copyright>$copyright$</copyright>
+    <tags>OCR ICR DRMS VisionAI Google</tags>
+  </metadata>
+</package>

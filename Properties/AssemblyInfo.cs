@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("DRMS_OCRToolkit")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("An API used for interacting with Google Vision while also handling the database interactions.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Data Records Management Services")]
 [assembly: AssemblyProduct("DRMS_OCRToolkit")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
