@@ -16,7 +16,7 @@ namespace DRMS_OCRToolkit
     {
         private readonly string _credentialsPath;
         private readonly ImageAnnotatorClient _client;
-        private Regex _regex = new Regex(@"[^a-zA-Z0-9 -]");
+        private readonly Regex _regex = new Regex(@"[^a-zA-Z0-9 -]");
         private readonly string _connectionString;
 
         public OCRTool(string credentialsPath, string connString)
