@@ -72,11 +72,12 @@ namespace DRMS_OCRToolkit
                     {
                         foreach (var word in paragraph.Words)
                         {
+                            var text = _regex.Replace(string.Join("", word.Symbols.Select(s => s.Text)), string.Empty);
                             results.Add(new PageText
                             {
                                 DocumentID = docID,
                                 PageNumber = pageNum,
-                                Text = string.Join("", word.Symbols.Select(s => s.Text)),
+                                Text = text,
                                 ULX = word.BoundingBox.Vertices[0].X,
                                 ULY = word.BoundingBox.Vertices[0].Y,
                                 LRX = word.BoundingBox.Vertices[2].X,
