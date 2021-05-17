@@ -2,13 +2,13 @@
 <package >
   <metadata>
     <id>DRMS_OCRToolkit</id>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <title>DRMS OCR Toolkit</title>
     <authors>mackentish</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <description>An API used for interacting with Google Vision while also handling the database interactions.</description>
-    <releaseNotes>Added methods to return PageText objects with the coordinates for the upper left and lower right corners of the words' bounding boxes</releaseNotes>
+    <releaseNotes>Better documentation and changed the return type for SearchDocuments methods.</releaseNotes>
     <copyright>$copyright$</copyright>
     <tags>OCR ICR DRMS VisionAI Google</tags>
   </metadata>

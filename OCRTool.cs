@@ -395,8 +395,8 @@ namespace DRMS_OCRToolkit
         /// any of the given words.
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
-        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
-        /// matched document and the value is a list of matched words.</returns>
+        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// the value is a list of matched words.</returns>
         public SortedList<string, List<string>> FindDocuments(string[] searchWords)
         {
             Parallel.For(0, searchWords.Length, i =>
@@ -431,8 +431,8 @@ namespace DRMS_OCRToolkit
         /// any of the given words.
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
-        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
-        /// matched document and the value is a list of matched words.</returns>
+        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// the value is a list of matched words.</returns>
         public async Task<SortedList<string, List<string>>> FindDocumentsAsync(string[] searchWords)
         {
             return await Task.Run(() => FindDocuments(searchWords));
@@ -444,8 +444,8 @@ namespace DRMS_OCRToolkit
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
         /// <param name="searchDocs">File paths of documents to search through.</param>
-        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
-        /// matched document and the value is a list of matched words.</returns>
+        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// the value is a list of matched words.</returns>
         public SortedList<string, List<string>> FindDocuments(string[] searchWords, string[] searchDocs)
         {
             Parallel.For(0, searchWords.Length, i =>
@@ -481,8 +481,8 @@ namespace DRMS_OCRToolkit
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
         /// <param name="searchDocs">File paths of documents to search through.</param>
-        /// <returns>SortedList<string, List<string>> object where the key is the file name of a 
-        /// matched document and the value is a list of matched words.</returns>
+        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// the value is a list of matched words.</returns>
         public async Task<SortedList<string, List<string>>> FindDocumentsAsync(string[] searchWords, string[] searchDocs)
         {
             return await Task.Run(() => FindDocuments(searchWords, searchDocs));
@@ -692,31 +692,18 @@ namespace DRMS_OCRToolkit
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
         /// <param name="searchDocs">File paths of documents to search through.</param>
-        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
-        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
-        public SortedList<string, List<PageText>> SearchDocuments(string[] searchWords, string[] searchDocs)
+        /// <returns>List of PageText objects with matching criteria.</returns>
+        public List<PageText> SearchDocuments(string[] searchWords, string[] searchDocs)
         {
             Parallel.For(0, searchWords.Length, i =>
             {
                 searchWords[i] = _regex.Replace(searchWords[i].ToUpper(), string.Empty);
             });
 
-            var results = new SortedList<string, List<PageText>>();
-            List<PageText> pages;
+            var results = new List<PageText>();
             using (var context = new DataModel(_connectionString))
             {
-                pages = context.PageText.Where(s => searchDocs.Contains(s.DocumentID) && searchWords.Contains(s.Text.ToUpper())).ToList();
-            }
-            foreach (var page in pages)
-            {
-                if (results.ContainsKey(page.DocumentID))
-                {
-                    results[page.DocumentID].Add(page);
-                }
-                else
-                {
-                    results.Add(page.DocumentID, new List<PageText> { page });
-                }
+                results = context.PageText.Where(s => searchDocs.Contains(s.DocumentID) && searchWords.Contains(s.Text.ToUpper())).ToList();
             }
             return results;
         }
@@ -726,9 +713,8 @@ namespace DRMS_OCRToolkit
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
         /// <param name="searchDocs">File paths of documents to search through.</param>
-        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
-        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
-        public async Task<SortedList<string, List<PageText>>> SearchDocumentsAsync(string[] searchWords, string[] searchDocs)
+        /// <returns>List of PageText objects with matching criteria.</returns>
+        public async Task<List<PageText>> SearchDocumentsAsync(string[] searchWords, string[] searchDocs)
         {
             return await Task.Run(() => SearchDocuments(searchWords, searchDocs));
         }
@@ -738,34 +724,18 @@ namespace DRMS_OCRToolkit
         /// any of the given words.
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
-        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
-        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
-        public SortedList<string, List<PageText>> SearchDocuments(string[] searchWords)
+        /// <returns>List of PageText objects with matching criteria.</returns>
+        public List<PageText> SearchDocuments(string[] searchWords)
         {
             Parallel.For(0, searchWords.Length, i =>
             {
                 searchWords[i] = searchWords[i].Trim().ToUpper();
             });
 
-            var results = new SortedList<string, List<PageText>>();
-            List<PageText> pages;
+            var results = new List<PageText>();
             using (var context = new DataModel(_connectionString))
             {
-                pages = context.PageText.Where(s => searchWords.Contains(s.Text.ToUpper())).ToList();
-            }
-            foreach (var page in pages)
-            {
-                if (results.ContainsKey(page.DocumentID))
-                {
-                    if (!results[page.DocumentID].Contains(page))
-                    {
-                        results[page.DocumentID].Add(page);
-                    }
-                }
-                else
-                {
-                    results.Add(page.DocumentID, new List<PageText> { page });
-                }
+                results = context.PageText.Where(s => searchWords.Contains(s.Text.ToUpper())).ToList();
             }
             return results;
         }
@@ -774,9 +744,8 @@ namespace DRMS_OCRToolkit
         /// any of the given words.
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
-        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
-        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
-        public async Task<SortedList<string, List<PageText>>> SearchDocumentsAsync(string[] searchWords)
+        /// <returns>List of PageText objects with matching criteria.</returns>
+        public async Task<List<PageText>> SearchDocumentsAsync(string[] searchWords)
         {
             return await Task.Run(() => SearchDocuments(searchWords));
         }
