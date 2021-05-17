@@ -362,6 +362,31 @@ namespace DRMS_OCRToolkit
         {
             await Task.Run(() => WriteToDB(filePath, pageNum, overrideExisting));
         }
+
+        /// <summary>
+        /// If there is data in the database for the specified file then it is deleted.
+        /// </summary>
+        /// <param name="filePath">Path to the pdf file to delete data for.</param>
+        public void DeleteFromDB(string filePath)
+        {
+            using (var context = new DataModel(_connectionString))
+            {
+                var docID = Path.GetFileNameWithoutExtension(filePath).Trim();
+                if(context.PageText.Any(s => s.DocumentID == docID))
+                    context.PageText.RemoveRange(context.PageText.Where(s => s.DocumentID == docID));
+                if (context.Documents.Any(s => s.FileName == docID))
+                    context.Documents.RemoveRange(context.Documents.Where(s => s.FileName == docID));
+                context.SaveChanges();
+            }
+        }
+        /// <summary>
+        /// If there is data in the database for the specified file then it is deleted.
+        /// </summary>
+        /// <param name="filePath">Path to the pdf file to delete data for.</param>
+        public async Task DeleteFromDBAsync(string filePath)
+        {
+            await Task.Run(() => DeleteFromDB(filePath));
+        }
         #endregion
 
         #region Searching
@@ -604,6 +629,156 @@ namespace DRMS_OCRToolkit
         public async Task<string[]> GetDocumentTextAsync(bool dbSearch, string filePath)
         {
             return await Task.Run(() => GetDocumentText(dbSearch, filePath));
+        }
+        #endregion
+
+        #region Bounding Boxes
+        /// <summary>
+        /// Provides a list of the PageText objects for the specified document. If dbSearch is set to true then it will search the
+        /// database for matching values first. If the document does not exist in the database then it will scan
+        /// the document and use that output.
+        /// </summary>
+        /// <param name="dbSearch">Indicate whether you want to search the database for a match first.</param>
+        /// <param name="filePath">Path to the pdf file that should be processed.</param>
+        /// <returns>List of PageText objects for representing the document's text.</returns>
+        public List<PageText> GetDocumentPageText(bool dbSearch, string filePath)
+        {
+            var docID = Path.GetFileNameWithoutExtension(filePath).Trim();
+            if (dbSearch && DocumentExists(filePath))
+            {
+                using (var context = new DataModel(_connectionString))
+                {
+                    if (!context.Documents.Any(s => s.FileName == docID))
+                        return new List<PageText>();
+
+                    var allText = context.PageText.Where(s => s.DocumentID == docID)
+                        .OrderBy(s => s.PageNumber)
+                        .ThenBy(s => s.ID)
+                        .ToList();
+                    return allText;
+                }
+            }
+            else
+            {
+                ValidateVision();
+
+                var imagePaths = GetPngImage(filePath, Path.GetTempPath());
+                var result = new List<PageText>();
+                Parallel.For(0, imagePaths.Length, pageNum =>
+                {
+                    var image = Image.FromFile(imagePaths[pageNum]);
+                    var response = _client.DetectDocumentText(image);
+                    result.AddRange(ProcessResponse(response, docID, pageNum));
+                });
+                return result;
+            }
+        }
+        /// <summary>
+        /// Provides a list of the PageText objects for the specified document. If dbSearch is set to true then it will search the
+        /// database for matching values first. If the document does not exist in the database then it will scan
+        /// the document and use that output.
+        /// </summary>
+        /// <param name="dbSearch">Indicate whether you want to search the database for a match first.</param>
+        /// <param name="filePath">Path to the pdf file that should be processed.</param>
+        /// <returns>List of PageText objects for representing the document's text.</returns>
+        public async Task<List<PageText>> GetDocumentPageTextAsync(bool dbSearch, string filePath)
+        {
+            return await Task.Run(() => GetDocumentPageText(dbSearch, filePath));
+        }
+
+        /// <summary>
+        /// Searches through the given documents and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <param name="searchDocs">File paths of documents to search through.</param>
+        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
+        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
+        public SortedList<string, List<PageText>> SearchDocuments(string[] searchWords, string[] searchDocs)
+        {
+            Parallel.For(0, searchWords.Length, i =>
+            {
+                searchWords[i] = _regex.Replace(searchWords[i].ToUpper(), string.Empty);
+            });
+
+            var results = new SortedList<string, List<PageText>>();
+            List<PageText> pages;
+            using (var context = new DataModel(_connectionString))
+            {
+                pages = context.PageText.Where(s => searchDocs.Contains(s.DocumentID) && searchWords.Contains(s.Text.ToUpper())).ToList();
+            }
+            foreach (var page in pages)
+            {
+                if (results.ContainsKey(page.DocumentID))
+                {
+                    results[page.DocumentID].Add(page);
+                }
+                else
+                {
+                    results.Add(page.DocumentID, new List<PageText> { page });
+                }
+            }
+            return results;
+        }
+        /// <summary>
+        /// Searches through the given documents and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <param name="searchDocs">File paths of documents to search through.</param>
+        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
+        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
+        public async Task<SortedList<string, List<PageText>>> SearchDocumentsAsync(string[] searchWords, string[] searchDocs)
+        {
+            return await Task.Run(() => SearchDocuments(searchWords, searchDocs));
+        }
+
+        /// <summary>
+        /// Searches through all documents in the database and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
+        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
+        public SortedList<string, List<PageText>> SearchDocuments(string[] searchWords)
+        {
+            Parallel.For(0, searchWords.Length, i =>
+            {
+                searchWords[i] = searchWords[i].Trim().ToUpper();
+            });
+
+            var results = new SortedList<string, List<PageText>>();
+            List<PageText> pages;
+            using (var context = new DataModel(_connectionString))
+            {
+                pages = context.PageText.Where(s => searchWords.Contains(s.Text.ToUpper())).ToList();
+            }
+            foreach (var page in pages)
+            {
+                if (results.ContainsKey(page.DocumentID))
+                {
+                    if (!results[page.DocumentID].Contains(page))
+                    {
+                        results[page.DocumentID].Add(page);
+                    }
+                }
+                else
+                {
+                    results.Add(page.DocumentID, new List<PageText> { page });
+                }
+            }
+            return results;
+        }
+        /// <summary>
+        /// Searches through all documents in the database and returns the file name of documents that contain
+        /// any of the given words.
+        /// </summary>
+        /// <param name="searchWords">Words to match (NOT case sensitive).</param>
+        /// <returns>SortedList<string, List<PageText>> object where the key is the file name of a 
+        /// matched document and the value is a list of PageText objects representing the matched words.</returns>
+        public async Task<SortedList<string, List<PageText>>> SearchDocumentsAsync(string[] searchWords)
+        {
+            return await Task.Run(() => SearchDocuments(searchWords));
         }
         #endregion
     }
