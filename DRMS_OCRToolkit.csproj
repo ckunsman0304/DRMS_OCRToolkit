@@ -144,6 +144,10 @@
     <Compile Include="Migrations\202105131932187_point coordinates.designer.cs">
       <DependentUpon>202105131932187_point coordinates.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202105242049307_change coordinate names.cs" />
+    <Compile Include="Migrations\202105242049307_change coordinate names.designer.cs">
+      <DependentUpon>202105242049307_change coordinate names.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DataModel.cs" />
     <Compile Include="Models\Document.cs" />
@@ -161,6 +165,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202105131932187_point coordinates.resx">
       <DependentUpon>202105131932187_point coordinates.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202105242049307_change coordinate names.resx">
+      <DependentUpon>202105242049307_change coordinate names.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

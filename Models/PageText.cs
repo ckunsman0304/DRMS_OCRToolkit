@@ -17,13 +17,11 @@ namespace DRMS_OCRToolkit.Models
         public virtual Document Document { get; set; }
         public int PageNumber { get; set; }
         [StringLength(100)]
-        public string Text { get; set; }        
-        //Upper left coordinates:
-        public int ULX { get; set; }
-        public int ULY { get; set; }
-        //Lower right coordinates:
-        public int LRX { get; set; }
-        public int LRY { get; set; }
+        public string Text { get; set; }
+        public int Left { get; set; }
+        public int Top { get; set; }
+        public int Right { get; set; }
+        public int Bottom { get; set; }
 
 
 
@@ -33,20 +31,20 @@ namespace DRMS_OCRToolkit.Models
                    DocumentID == text.DocumentID 
                    && PageNumber == text.PageNumber 
                    && Text == text.Text 
-                   && (ULX == text.ULX - 1 || ULX == text.ULX || ULX == text.ULX + 1)
-                   && (ULY == text.ULY - 1 || ULY == text.ULY || ULY == text.ULY + 1)
-                   && (LRX == text.LRX - 1 || LRX == text.LRX || LRX == text.LRX + 1)
-                   && (LRY == text.LRY - 1 || LRY == text.LRY || LRY == text.LRY + 1);
+                   && (Left == text.Left - 1 || Left == text.Left || Left == text.Left + 1)
+                   && (Top == text.Top - 1 || Top == text.Top || Top == text.Top + 1)
+                   && (Right == text.Right - 1 || Right == text.Right || Right == text.Right + 1)
+                   && (Bottom == text.Bottom - 1 || Bottom == text.Bottom || Bottom == text.Bottom + 1);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(DocumentID, PageNumber, Text, ULX, ULY, LRX, LRY);
+            return HashCode.Combine(DocumentID, PageNumber, Text, Left, Top, Right, Bottom);
         }
 
         public override string ToString()
         {
-            return $"{DocumentID}, Pg: {PageNumber}. '{Text}' UL:({ULX} , {ULY})   LR:({LRX} , {LRY})";
+            return $"{DocumentID}, Pg: {PageNumber}. '{Text}' UL:({Left} , {Top})   LR:({Right} , {Bottom})";
         }
     }
 }

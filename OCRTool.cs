@@ -118,10 +118,10 @@ namespace DRMS_OCRToolkit
                                     DocumentID = docID,
                                     PageNumber = pageNum,
                                     Text = text,
-                                    ULX = word.BoundingBox.Vertices[0].X,
-                                    ULY = word.BoundingBox.Vertices[0].Y,
-                                    LRX = word.BoundingBox.Vertices[2].X,
-                                    LRY = word.BoundingBox.Vertices[2].Y
+                                    Left = word.BoundingBox.Vertices[0].X,
+                                    Top = word.BoundingBox.Vertices[0].Y,
+                                    Right = word.BoundingBox.Vertices[2].X,
+                                    Bottom = word.BoundingBox.Vertices[2].Y
                                 });
                             }
                         }
