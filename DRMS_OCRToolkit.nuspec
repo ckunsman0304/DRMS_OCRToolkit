@@ -2,13 +2,13 @@
 <package >
   <metadata>
     <id>DRMS_OCRToolkit</id>
-    <version>1.2.4</version>
+    <version>1.2.7</version>
     <title>DRMS OCR Toolkit</title>
     <authors>mackentish</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <description>An API used for interacting with Google Vision while also handling the database interactions.</description>
-    <releaseNotes>Change PageText coordinate properties to be decimals representing a percentage of the page width/height.</releaseNotes>
+    <releaseNotes>Removed Parallel.ForEach loop that was causing issues.</releaseNotes>
     <copyright>$copyright$</copyright>
     <tags>OCR ICR DRMS VisionAI Google</tags>
   </metadata>

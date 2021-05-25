@@ -108,7 +108,7 @@ namespace DRMS_OCRToolkit
                 {
                     foreach (var paragraph in block.Paragraphs)
                     {
-                        Parallel.ForEach(paragraph.Words, word =>
+                        foreach(var word in paragraph.Words)
                         {
                             var text = _regex.Replace(string.Join("", word.Symbols.Select(s => s.Text)), string.Empty);
                             if (!string.IsNullOrWhiteSpace(text))
@@ -119,24 +119,24 @@ namespace DRMS_OCRToolkit
                                     PageNumber = pageNum,
                                     Text = text,
                                     //Coordinates as percentages of the page
-                                    Left = (word.BoundingBox.Vertices[0].X < word.BoundingBox.Vertices[3].X 
-                                          ? word.BoundingBox.Vertices[0].X 
-                                          : word.BoundingBox.Vertices[3].X) / (decimal)page.Width,
+                                    Left = (word.BoundingBox.Vertices[0].X > 0
+                                          ? word.BoundingBox.Vertices[0].X
+                                          : 0) / (decimal)page.Width,
 
-                                    Top = (word.BoundingBox.Vertices[0].Y < word.BoundingBox.Vertices[1].Y 
-                                         ? word.BoundingBox.Vertices[0].Y 
-                                         : word.BoundingBox.Vertices[1].Y) / (decimal)page.Height,
+                                    Top = (word.BoundingBox.Vertices[0].Y > 0
+                                         ? word.BoundingBox.Vertices[0].Y
+                                         : 0) / (decimal)page.Height,
 
-                                    Right = (word.BoundingBox.Vertices[2].X > word.BoundingBox.Vertices[1].X 
-                                           ? word.BoundingBox.Vertices[2].X 
-                                           : word.BoundingBox.Vertices[1].X) / (decimal)page.Width,
+                                    Right = (word.BoundingBox.Vertices[2].X > 0
+                                           ? word.BoundingBox.Vertices[2].X
+                                           : 0) / (decimal)page.Width,
 
-                                    Bottom = (word.BoundingBox.Vertices[2].Y > word.BoundingBox.Vertices[3].Y 
-                                            ? word.BoundingBox.Vertices[2].Y 
-                                            : word.BoundingBox.Vertices[3].Y) / (decimal)page.Height
+                                    Bottom = (word.BoundingBox.Vertices[2].Y > 0
+                                            ? word.BoundingBox.Vertices[2].Y
+                                            : 0) / (decimal)page.Height
                                 });
                             }
-                        });
+                        }
                     }
                 }
             }
