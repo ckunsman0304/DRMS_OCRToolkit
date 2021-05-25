@@ -148,6 +148,10 @@
     <Compile Include="Migrations\202105242049307_change coordinate names.designer.cs">
       <DependentUpon>202105242049307_change coordinate names.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202105251351275_change coordinates to decimals.cs" />
+    <Compile Include="Migrations\202105251351275_change coordinates to decimals.designer.cs">
+      <DependentUpon>202105251351275_change coordinates to decimals.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DataModel.cs" />
     <Compile Include="Models\Document.cs" />
@@ -168,6 +172,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202105242049307_change coordinate names.resx">
       <DependentUpon>202105242049307_change coordinate names.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202105251351275_change coordinates to decimals.resx">
+      <DependentUpon>202105251351275_change coordinates to decimals.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -18,10 +18,22 @@ namespace DRMS_OCRToolkit.Models
         public int PageNumber { get; set; }
         [StringLength(100)]
         public string Text { get; set; }
-        public int Left { get; set; }
-        public int Top { get; set; }
-        public int Right { get; set; }
-        public int Bottom { get; set; }
+        /// <summary>
+        /// Left-most X coordinate as a percentage of the page width
+        /// </summary>
+        public decimal Left { get; set; }
+        /// <summary>
+        /// Top-most Y coordinate as a percentage of the page height (Y origin is at top of page)
+        /// </summary>
+        public decimal Top { get; set; }
+        /// <summary>
+        /// Right-most X coordinate as a percentage of the page width
+        /// </summary>
+        public decimal Right { get; set; }
+        /// <summary>
+        /// Bottom-most Y coordinate as a percentage of the page width (Y origin is at top of page)
+        /// </summary>
+        public decimal Bottom { get; set; }
 
 
 
@@ -44,7 +56,7 @@ namespace DRMS_OCRToolkit.Models
 
         public override string ToString()
         {
-            return $"{DocumentID}, Pg: {PageNumber}. '{Text}' UL:({Left} , {Top})   LR:({Right} , {Bottom})";
+            return $"{DocumentID}, Pg: {PageNumber}. '{Text}' Left:{Left.ToString("0.00")}; Top:{Top.ToString("0.00")}; Right:{Right.ToString("0.00")}; Bottom:{Bottom.ToString("0.00")}";
         }
     }
 }
