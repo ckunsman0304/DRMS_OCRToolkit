@@ -22,9 +22,9 @@ namespace DRMS_OCRToolkit
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="credentialsPath">Path to the credentials JSON file for 
+        /// <param name="credentialsPath">Path to the credentials JSON file for
         /// access to Google VisionAI.</param>
-        /// <param name="connString">Connection string used to connect to 
+        /// <param name="connString">Connection string used to connect to
         /// desired database.</param>
         public OCRTool(string credentialsPath, string connString)
         {
@@ -37,6 +37,7 @@ namespace DRMS_OCRToolkit
         }
 
         #region Getters/Setters
+
         /// <summary>
         /// Getter method for the connection string.
         /// </summary>
@@ -47,7 +48,7 @@ namespace DRMS_OCRToolkit
         }
 
         /// <summary>
-        /// Setter method that returns a new OCRTool object with 
+        /// Setter method that returns a new OCRTool object with
         /// the new connection string set.
         /// </summary>
         /// <param name="connString">The new connection string.</param>
@@ -68,7 +69,7 @@ namespace DRMS_OCRToolkit
         }
 
         /// <summary>
-        /// Setter method that returns a new OCRTool object with the 
+        /// Setter method that returns a new OCRTool object with the
         /// specified credentials path set.
         /// </summary>
         /// <param name="credentialsPath">New credentials path.</param>
@@ -77,9 +78,11 @@ namespace DRMS_OCRToolkit
         {
             return new OCRTool(credentialsPath, _connectionString);
         }
-        #endregion
+
+        #endregion Getters/Setters
 
         #region Helpers
+
         /// <summary>
         /// Deletes all given files.
         /// </summary>
@@ -108,7 +111,7 @@ namespace DRMS_OCRToolkit
                 {
                     foreach (var paragraph in block.Paragraphs)
                     {
-                        foreach(var word in paragraph.Words)
+                        foreach (var word in paragraph.Words)
                         {
                             var text = _regex.Replace(string.Join("", word.Symbols.Select(s => s.Text)), string.Empty);
                             if (!string.IsNullOrWhiteSpace(text))
@@ -174,7 +177,7 @@ namespace DRMS_OCRToolkit
                     var outputPNGPath = Path.Combine(outputPath, $"{Path.GetFileNameWithoutExtension(psFilename).Trim()}_page{pageNum + 1}.png");
                     results[pageNum] = outputPNGPath;
 
-                    //converts the PDF pages to png's 
+                    //converts the PDF pages to png's
                     var pdf2PNG = rasterizer.GetPage(dpi, pageNum + 1);
 
                     //save the png's
@@ -185,12 +188,12 @@ namespace DRMS_OCRToolkit
         }
 
         /// <summary>
-        /// Processes the file paths. If overrideExisting is true it deletes 
-        /// existing data from the database. Otherwise it removes that file 
+        /// Processes the file paths. If overrideExisting is true it deletes
+        /// existing data from the database. Otherwise it removes that file
         /// path from the array.
         /// </summary>
         /// <param name="filePaths">PDF file paths to process.</param>
-        /// <param name="overrideExisting">Indicate whether or not you want to 
+        /// <param name="overrideExisting">Indicate whether or not you want to
         /// override any existing data.</param>
         /// <returns>Fully processed array of file paths to use.</returns>
         private string[] ProcessPaths(string[] filePaths, bool overrideExisting)
@@ -217,15 +220,17 @@ namespace DRMS_OCRToolkit
                 }
             }
         }
-        #endregion
+
+        #endregion Helpers
 
         #region Writing
+
         /// <summary>
-        /// Batch processing method for performing OCR on all pages of all 
+        /// Batch processing method for performing OCR on all pages of all
         /// documents provided and writes the result to the database.
         /// </summary>
         /// <param name="filePaths">Array of paths to the pdf files to be added.</param>
-        /// <param name="overrideExisting">Indicate whether or not to override existing 
+        /// <param name="overrideExisting">Indicate whether or not to override existing
         /// data for any of the documents (if there is any).</param>
         /// <returns>An awaitable Task object.</returns>
         public async Task WriteToDBAsync(string[] filePaths, bool overrideExisting)
@@ -291,7 +296,7 @@ namespace DRMS_OCRToolkit
         /// writes the results to the database.
         /// </summary>
         /// <param name="filePath">Path to the pdf file to be added.</param>
-        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// <param name="overrideExisting">Indicate whether or not to override
         /// existing data for this document (if there is any).</param>
         public void WriteToDB(string filePath, bool overrideExisting)
         {
@@ -318,12 +323,13 @@ namespace DRMS_OCRToolkit
                 }
             }
         }
+
         /// <summary>
         /// Performs OCR on all pages of the provided document and
         /// writes the results to the database.
         /// </summary>
         /// <param name="filePath">Path to the pdf file to be added.</param>
-        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// <param name="overrideExisting">Indicate whether or not to override
         /// existing data for this page of the document (if there is any).</param>
         /// <returns>An awaitable Task object.</returns>
         public async Task WriteToDBAsync(string filePath, bool overrideExisting)
@@ -332,12 +338,12 @@ namespace DRMS_OCRToolkit
         }
 
         /// <summary>
-        /// Performs OCR on the specified page of the provided document and 
+        /// Performs OCR on the specified page of the provided document and
         /// writes the result to the database.
         /// </summary>
         /// <param name="filePath">Path to the pdf file to be added.</param>
         /// <param name="pageNum">Page number to be scanned (0-based index).</param>
-        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// <param name="overrideExisting">Indicate whether or not to override
         /// existing data for this page of the document (if there is any).</param>
         public void WriteToDB(string filePath, int pageNum, bool overrideExisting)
         {
@@ -361,13 +367,14 @@ namespace DRMS_OCRToolkit
                 ClearFiles(imagePaths); //Cleanup
             }
         }
+
         /// <summary>
-        /// Performs OCR on the specified page of the provided document and 
+        /// Performs OCR on the specified page of the provided document and
         /// writes the result to the database.
         /// </summary>
         /// <param name="filePath">Path to the pdf file to be added.</param>
         /// <param name="pageNum">Page number to be scanned (0-based index).</param>
-        /// <param name="overrideExisting">Indicate whether or not to override 
+        /// <param name="overrideExisting">Indicate whether or not to override
         /// existing data for this page of the document (if there is any).</param>
         /// <returns>An awaitable Task object.</returns>
         public async Task WriteToDBAsync(string filePath, int pageNum, bool overrideExisting)
@@ -384,13 +391,14 @@ namespace DRMS_OCRToolkit
             using (var context = new DataModel(_connectionString))
             {
                 var docID = Path.GetFileNameWithoutExtension(filePath).Trim();
-                if(context.PageText.Any(s => s.DocumentID == docID))
+                if (context.PageText.Any(s => s.DocumentID == docID))
                     context.PageText.RemoveRange(context.PageText.Where(s => s.DocumentID == docID));
                 if (context.Documents.Any(s => s.FileName == docID))
                     context.Documents.RemoveRange(context.Documents.Where(s => s.FileName == docID));
                 context.SaveChanges();
             }
         }
+
         /// <summary>
         /// If there is data in the database for the specified file then it is deleted.
         /// </summary>
@@ -399,15 +407,17 @@ namespace DRMS_OCRToolkit
         {
             await Task.Run(() => DeleteFromDB(filePath));
         }
-        #endregion
+
+        #endregion Writing
 
         #region Searching
+
         /// <summary>
         /// Searches through all documents in the database and returns the file name of documents that contain
         /// any of the given words.
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
-        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// <returns>Sorted list where the key is the file name of a matched document and
         /// the value is a list of matched words.</returns>
         public SortedList<string, List<string>> FindDocuments(string[] searchWords)
         {
@@ -438,12 +448,13 @@ namespace DRMS_OCRToolkit
             }
             return results;
         }
+
         /// <summary>
         /// Searches through all documents in the database and returns the file name of documents that contain
         /// any of the given words.
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
-        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// <returns>Sorted list where the key is the file name of a matched document and
         /// the value is a list of matched words.</returns>
         public async Task<SortedList<string, List<string>>> FindDocumentsAsync(string[] searchWords)
         {
@@ -456,14 +467,14 @@ namespace DRMS_OCRToolkit
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
         /// <param name="searchDocs">File paths of documents to search through.</param>
-        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// <returns>Sorted list where the key is the file name of a matched document and
         /// the value is a list of matched words.</returns>
         public SortedList<string, List<string>> FindDocuments(string[] searchWords, string[] searchDocs)
         {
             Parallel.For(0, searchWords.Length, i =>
             {
                 searchWords[i] = _regex.Replace(searchWords[i].ToUpper(), string.Empty);
-            });                
+            });
 
             var results = new SortedList<string, List<string>>();
             List<PageText> pages;
@@ -487,21 +498,24 @@ namespace DRMS_OCRToolkit
             }
             return results;
         }
+
         /// <summary>
         /// Searches through the given documents and returns the file name of documents that contain
         /// any of the given words.
         /// </summary>
         /// <param name="searchWords">Words to match (NOT case sensitive).</param>
         /// <param name="searchDocs">File paths of documents to search through.</param>
-        /// <returns>Sorted list where the key is the file name of a matched document and 
+        /// <returns>Sorted list where the key is the file name of a matched document and
         /// the value is a list of matched words.</returns>
         public async Task<SortedList<string, List<string>>> FindDocumentsAsync(string[] searchWords, string[] searchDocs)
         {
             return await Task.Run(() => FindDocuments(searchWords, searchDocs));
         }
-        #endregion
+
+        #endregion Searching
 
         #region Reading
+
         /// <summary>
         /// Determines whether or not the database already has data for the provided document.
         /// </summary>
@@ -509,7 +523,7 @@ namespace DRMS_OCRToolkit
         /// <returns>Value indicating if the database has data for this document.</returns>
         public bool DocumentExists(string filePath)
         {
-            using(var context = new DataModel(_connectionString))
+            using (var context = new DataModel(_connectionString))
             {
                 var docID = Path.GetFileNameWithoutExtension(filePath).Trim();
                 return context.Documents.Any(s => s.FileName == docID);
@@ -518,8 +532,8 @@ namespace DRMS_OCRToolkit
 
         /// <summary>
         /// Determines whether or not the given document contains one or more of the words given in the array.
-        /// If dbSearch is set to true then it will search the database for matching values first. If the 
-        /// document does not exist in the database then it will scan the document again and use that to 
+        /// If dbSearch is set to true then it will search the database for matching values first. If the
+        /// document does not exist in the database then it will scan the document again and use that to
         /// determine if the document contains any of the words or not.
         /// </summary>
         /// <param name="dbSearch">Indicated whether you want to search the database for a match first.</param>
@@ -537,7 +551,7 @@ namespace DRMS_OCRToolkit
                 using (var context = new DataModel(_connectionString))
                 {
                     var docID = Path.GetFileNameWithoutExtension(filePath).Trim();
-                    return context.PageText.Any(s => 
+                    return context.PageText.Any(s =>
                         s.DocumentID == docID
                         && searchWords.Contains(s.Text.ToUpper()));
                 }
@@ -574,10 +588,11 @@ namespace DRMS_OCRToolkit
                 return result;
             }
         }
+
         /// <summary>
         /// Determines whether or not the given document contains one or more of the words given in the array.
-        /// If dbSearch is set to true then it will search the database for matching values first. If the 
-        /// document does not exist in the database then it will scan the document again and use that to 
+        /// If dbSearch is set to true then it will search the database for matching values first. If the
+        /// document does not exist in the database then it will scan the document again and use that to
         /// determine if the document contains any of the words or not.
         /// </summary>
         /// <param name="dbSearch">Indicated whether you want to search the database for a match first.</param>
@@ -630,6 +645,7 @@ namespace DRMS_OCRToolkit
                 return result.ToArray();
             }
         }
+
         /// <summary>
         /// Provides the OCR text of the specified document. If dbSearch is set to true then it will search the
         /// database for matching values first. If the document does not exist in the database then it will scan
@@ -642,9 +658,11 @@ namespace DRMS_OCRToolkit
         {
             return await Task.Run(() => GetDocumentText(dbSearch, filePath));
         }
-        #endregion
+
+        #endregion Reading
 
         #region Bounding Boxes
+
         /// <summary>
         /// Provides a list of the PageText objects for the specified document. If dbSearch is set to true then it will search the
         /// database for matching values first. If the document does not exist in the database then it will scan
@@ -685,6 +703,7 @@ namespace DRMS_OCRToolkit
                 return result;
             }
         }
+
         /// <summary>
         /// Provides a list of the PageText objects for the specified document. If dbSearch is set to true then it will search the
         /// database for matching values first. If the document does not exist in the database then it will scan
@@ -719,6 +738,7 @@ namespace DRMS_OCRToolkit
             }
             return results;
         }
+
         /// <summary>
         /// Searches through the given documents and returns the file name of documents that contain
         /// any of the given words.
@@ -751,6 +771,7 @@ namespace DRMS_OCRToolkit
             }
             return results;
         }
+
         /// <summary>
         /// Searches through all documents in the database and returns the file name of documents that contain
         /// any of the given words.
@@ -761,6 +782,7 @@ namespace DRMS_OCRToolkit
         {
             return await Task.Run(() => SearchDocuments(searchWords));
         }
-        #endregion
+
+        #endregion Bounding Boxes
     }
 }

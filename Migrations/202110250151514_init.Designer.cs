@@ -7,13 +7,13 @@ namespace DRMS_OCRToolkit.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.4.4")]
-    public sealed partial class InitialCreation : IMigrationMetadata
+    public sealed partial class init : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(InitialCreation));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(init));
         
         string IMigrationMetadata.Id
         {
-            get { return "202105131708584_Initial Creation"; }
+            get { return "202110250151514_init"; }
         }
         
         string IMigrationMetadata.Source
