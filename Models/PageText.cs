@@ -11,38 +11,44 @@ namespace DRMS_OCRToolkit.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public long ID { get; set; }
+
         [Required]
         public string DocumentID { get; set; }
+
         [ForeignKey("DocumentID")]
         public virtual Document Document { get; set; }
+
         public int PageNumber { get; set; }
+
         [StringLength(100)]
         public string Text { get; set; }
+
         /// <summary>
         /// Left-most X coordinate as a percentage of the page width
         /// </summary>
-        public decimal Left { get; set; }
+        public float Left { get; set; }
+
         /// <summary>
         /// Top-most Y coordinate as a percentage of the page height (Y origin is at top of page)
         /// </summary>
-        public decimal Top { get; set; }
+        public float Top { get; set; }
+
         /// <summary>
         /// Right-most X coordinate as a percentage of the page width
         /// </summary>
-        public decimal Right { get; set; }
+        public float Right { get; set; }
+
         /// <summary>
         /// Bottom-most Y coordinate as a percentage of the page width (Y origin is at top of page)
         /// </summary>
-        public decimal Bottom { get; set; }
-
-
+        public float Bottom { get; set; }
 
         public override bool Equals(object obj)
         {
             return obj != null && obj is PageText text &&
-                   DocumentID == text.DocumentID 
-                   && PageNumber == text.PageNumber 
-                   && Text == text.Text 
+                   DocumentID == text.DocumentID
+                   && PageNumber == text.PageNumber
+                   && Text == text.Text
                    && (Left == text.Left - 1 || Left == text.Left || Left == text.Left + 1)
                    && (Top == text.Top - 1 || Top == text.Top || Top == text.Top + 1)
                    && (Right == text.Right - 1 || Right == text.Right || Right == text.Right + 1)

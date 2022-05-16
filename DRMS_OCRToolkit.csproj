@@ -137,11 +137,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Migrations\202110250151514_init.cs" />
-    <Compile Include="Migrations\202110250151514_init.designer.cs">
-      <DependentUpon>202110250151514_init.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DataModel.cs" />
     <Compile Include="Models\Document.cs" />
     <Compile Include="OCRTool.cs" />
@@ -151,11 +146,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\202110250151514_init.resx">
-      <DependentUpon>202110250151514_init.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Grpc.Core.2.36.4\build\net45\Grpc.Core.targets" Condition="Exists('packages\Grpc.Core.2.36.4\build\net45\Grpc.Core.targets')" />

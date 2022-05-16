@@ -1,6 +1,7 @@
 ﻿using DRMS_OCRToolkit.Models;
 using Ghostscript.NET.Rasterizer;
 using Google.Cloud.Vision.V1;
+using Google.Protobuf;
 using iTextSharp.text.pdf;
 using System;
 using System.Collections.Generic;
@@ -122,21 +123,13 @@ namespace DRMS_OCRToolkit
                                     PageNumber = pageNum,
                                     Text = text,
                                     //Coordinates as percentages of the page
-                                    Left = (word.BoundingBox.Vertices[0].X > 0
-                                          ? word.BoundingBox.Vertices[0].X
-                                          : 0) / (decimal)page.Width,
+                                    Left = word.BoundingBox.NormalizedVertices[0].X,
 
-                                    Top = (word.BoundingBox.Vertices[0].Y > 0
-                                         ? word.BoundingBox.Vertices[0].Y
-                                         : 0) / (decimal)page.Height,
+                                    Top = word.BoundingBox.NormalizedVertices[0].Y,
 
-                                    Right = (word.BoundingBox.Vertices[2].X > 0
-                                           ? word.BoundingBox.Vertices[2].X
-                                           : 0) / (decimal)page.Width,
+                                    Right = word.BoundingBox.NormalizedVertices[2].X,
 
-                                    Bottom = (word.BoundingBox.Vertices[2].Y > 0
-                                            ? word.BoundingBox.Vertices[2].Y
-                                            : 0) / (decimal)page.Height
+                                    Bottom = word.BoundingBox.NormalizedVertices[2].Y
                                 });
                             }
                         }
@@ -298,23 +291,49 @@ namespace DRMS_OCRToolkit
         /// <param name="filePath">Path to the pdf file to be added.</param>
         /// <param name="overrideExisting">Indicate whether or not to override
         /// existing data for this document (if there is any).</param>
-        public void WriteToDB(string filePath, bool overrideExisting)
+        public void WriteToDB(string filePath, string fileName, bool overrideExisting)
         {
             ValidateVision();
 
             var toProcess = ProcessPaths(new string[] { filePath }, overrideExisting);
             if (toProcess.Length > 0)
             {
-                var imagePaths = GetPngImage(toProcess[0], Path.GetTempPath());
-                var document = new Document { FileName = Path.GetFileNameWithoutExtension(toProcess[0]).Trim() };
+                //var imagePaths = GetPngImage(toProcess[0], Path.GetTempPath());
+                var document = new Document { FileName = fileName };
+                //var docText = new List<PageText>();
+                //Parallel.For(0, imagePaths.Length, pageNum =>
+                //{
+                //    var image = Image.FromFile(imagePaths[pageNum]);
+                //    File.Delete(imagePaths[pageNum]); //Cleanup
+                //    var response = _client.DetectDocumentText(image);
+                //    docText.AddRange(ProcessResponse(response, document.FileName, pageNum));
+                //});
                 var docText = new List<PageText>();
-                Parallel.For(0, imagePaths.Length, pageNum =>
+                var client = _client;
+                Byte[] bytes = File.ReadAllBytes(filePath);
+                var content_byte = ByteString.CopyFrom(bytes);
+
+                var syncRequest = new AnnotateFileRequest
                 {
-                    var image = Image.FromFile(imagePaths[pageNum]);
-                    File.Delete(imagePaths[pageNum]); //Cleanup
-                    var response = _client.DetectDocumentText(image);
-                    docText.AddRange(ProcessResponse(response, document.FileName, pageNum));
+                    InputConfig = new InputConfig
+                    {
+                        Content = content_byte,
+                        // Supported mime_types are: 'application/pdf' and 'image/tiff'
+                        MimeType = "application/pdf"
+                    }
+                };
+
+                syncRequest.Features.Add(new Feature
+                {
+                    Type = Feature.Types.Type.DocumentTextDetection
                 });
+
+                List<AnnotateFileRequest> requests =
+                    new List<AnnotateFileRequest>();
+                requests.Add(syncRequest);
+
+                var response = client.BatchAnnotateFiles(requests);
+                docText.AddRange(ProcessResponse(response.Responses.FirstOrDefault().Responses.FirstOrDefault().FullTextAnnotation, document.FileName, 1));
                 using (var context = new DataModel(_connectionString))
                 {
                     context.Documents.Add(document);
@@ -332,10 +351,10 @@ namespace DRMS_OCRToolkit
         /// <param name="overrideExisting">Indicate whether or not to override
         /// existing data for this page of the document (if there is any).</param>
         /// <returns>An awaitable Task object.</returns>
-        public async Task WriteToDBAsync(string filePath, bool overrideExisting)
-        {
-            await Task.Run(() => WriteToDB(filePath, overrideExisting));
-        }
+        //public async Task WriteToDBAsync(string filePath, bool overrideExisting)
+        //{
+        //    await Task.Run(() => WriteToDB(filePath, overrideExisting));
+        //}
 
         /// <summary>
         /// Performs OCR on the specified page of the provided document and
